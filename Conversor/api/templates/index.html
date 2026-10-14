@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor Escalável de Mídia</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #0f172a;
+            color: #f8fafc;
+            margin: 0;
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            width: 100%;
+            max-width: 720px;
+            background-color: #1e293b;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+        h1 {
+            margin-top: 0;
+            color: #38bdf8;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        p.subtitle {
+            text-align: center;
+            color: #94a3b8;
+            margin-bottom: 25px;
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: bold;
+            color: #cbd5e1;
+        }
+        input[type="file"], input[type="email"], select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 6px;
+            border: 1px solid #334155;
+            background-color: #0f172a;
+            color: #ffffff;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        button.btn-submit {
+            width: 100%;
+            background-color: #0284c7;
+            color: #ffffff;
+            border: none;
+            padding: 12px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        button.btn-submit:hover {
+            background-color: #0369a1;
+        }
+        .status-box {
+            margin-top: 25px;
+            padding: 15px;
+            background: #090d16;
+            border-radius: 8px;
+            border-left: 4px solid #38bdf8;
+            display: none;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+        .badge-PENDENTE { background-color: #eab308; color: #000; }
+        .badge-PROCESSANDO { background-color: #3b82f6; color: #fff; }
+        .badge-CONCLUÍDO { background-color: #22c55e; color: #fff; }
+        .badge-ERRO { background-color: #ef4444; color: #fff; }
+
+        .btn-download {
+            display: inline-block;
+            margin-top: 10px;
+            background: #22c55e;
+            color: #fff;
+            padding: 8px 16px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            margin-top: 25px;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        th, td {
+            padding: 10px;
+            border-bottom: 1px solid #334155;
+            text-align: left;
+        }
+        th { color: #94a3b8; }
+        .quick-links {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+        .quick-links a {
+            color: #38bdf8;
+            margin: 0 10px;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Conversor Assíncrono de Mídia</h1>
+        <p class="subtitle">Arquitetura Distribuída: Flask &bull; RabbitMQ &bull; MinIO &bull; Workers</p>
+
+        <form id="uploadForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file">1. Selecione o arquivo (Vídeo, Áudio ou Imagem):</label>
+                <input type="file" id="file" name="file" required onchange="detectFormat(this)">
+            </div>
+
+            <div class="form-group">
+                <label for="targetFormat">2. Formato de Destino Desejado:</label>
+                <select id="targetFormat" name="targetFormat" required>
+                    <option value="">Selecione um arquivo primeiro...</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="email">3. E-mail para Notificação:</label>
+                <input type="email" id="email" name="email" value="aluno@exemplo.com" required>
+            </div>
+
+            <button type="submit" class="btn-submit" id="btnSubmit">Enviar para Conversão</button>
+        </form>
+
+        <div id="statusBox" class="status-box">
+            <h3>Status do Pedido</h3>
+            <p><strong>Job ID:</strong> <span id="currentJobId">-</span></p>
+            <p><strong>Estado:</strong> <span id="currentStatus" class="badge badge-PENDENTE">PENDENTE</span></p>
+            <div id="downloadArea"></div>
+        </div>
+
+        <h3 style="margin-top: 35px; color: #cbd5e1;">Histórico Recente de Conversões</h3>
+        <table id="jobsTable">
+            <thead>
+                <tr>
+                    <th>Arquivo</th>
+                    <th>Destino</th>
+                    <th>Status</th>
+                    <th>Link</th>
+                </tr>
+            </thead>
+            <tbody id="jobsList">
+                <tr><td colspan="4" style="text-align:center; color:#64748b;">Nenhum job processado ainda.</td></tr>
+            </tbody>
+        </table>
+
+        <div class="quick-links">
+            <a href="http://localhost:15672" target="_blank" title="admin/admin">Painel RabbitMQ (:15672)</a>
+            <a href="http://localhost:9001" target="_blank" title="minioadmin/minioadmin">Console MinIO (:9001)</a>
+            <a href="http://localhost:8025" target="_blank">Caixa de E-mails Mailpit (:8025)</a>
+        </div>
+    </div>
+
+    <script>
+        let currentPollingId = null;
+
+        function detectFormat(input) {
+            const select = document.getElementById("targetFormat");
+            select.innerHTML = "";
+            if (!input.files || input.files.length === 0) return;
+
+            const name = input.files[0].name.toLowerCase();
+            const ext = name.split('.').pop();
+
+            let options = [];
+            if (['mp4', 'avi', 'mov', 'mkv', 'webm'].includes(ext)) {
+                options = ['mp4', 'avi', 'mov', 'mkv', 'mp3']; // Permite até extrair áudio de vídeo!
+            } else if (['mp3', 'wav', 'ogg', 'aac'].includes(ext)) {
+                options = ['mp3', 'wav', 'ogg', 'aac'];
+            } else if (['png', 'jpg', 'jpeg', 'webp', 'bmp'].includes(ext)) {
+                options = ['png', 'jpg', 'webp', 'bmp'];
+            } else {
+                options = ['mp4', 'avi', 'mp3', 'wav', 'jpg', 'png'];
+            }
+
+            options.forEach(opt => {
+                const el = document.createElement("option");
+                el.value = opt;
+                el.textContent = opt.toUpperCase();
+                select.appendChild(el);
+            });
+        }
+
+        document.getElementById("uploadForm").onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById("btnSubmit");
+            btn.disabled = true;
+            btn.textContent = "Enviando arquivo...";
+
+            const formData = new FormData(e.target);
+            try {
+                const res = await fetch("/upload", { method: "POST", body: formData });
+                const data = await res.json();
+                if (res.status === 202) {
+                    showStatusBox(data.jobId);
+                    startPolling(data.jobId);
+                } else {
+                    alert("Erro: " + (data.error || "Falha no envio"));
+                }
+            } catch (err) {
+                alert("Erro de conexão com o servidor: " + err);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "Enviar para Conversão";
+            }
+        };
+
+        function showStatusBox(jobId) {
+            document.getElementById("statusBox").style.display = "block";
+            document.getElementById("currentJobId").textContent = jobId;
+            updateStatusBadge("PENDENTE");
+            document.getElementById("downloadArea").innerHTML = "<em>Aguardando worker iniciar...</em>";
+        }
+
+        function updateStatusBadge(status) {
+            const el = document.getElementById("currentStatus");
+            el.className = "badge badge-" + status;
+            el.textContent = status;
+        }
+
+        function startPolling(jobId) {
+            if (currentPollingId) clearInterval(currentPollingId);
+            currentPollingId = setInterval(async () => {
+                try {
+                    const res = await fetch("/jobs/" + jobId);
+                    if (!res.ok) return;
+                    const job = await res.json();
+                    updateStatusBadge(job.status);
+
+                    if (job.status === "CONCLUÍDO") {
+                        clearInterval(currentPollingId);
+                        document.getElementById("downloadArea").innerHTML =
+                            `<a href="${job.downloadUrl}" target="_blank" class="btn-download">Baixar Arquivo Convertido</a>`;
+                        loadRecentJobs();
+                    } else if (job.status === "ERRO") {
+                        clearInterval(currentPollingId);
+                        document.getElementById("downloadArea").innerHTML =
+                            `<span style="color:#ef4444;">Falha na conversão: ${job.error || "Erro no processamento"}</span>`;
+                        loadRecentJobs();
+                    }
+                } catch (_) {}
+            }, 1000);
+        }
+
+        async function loadRecentJobs() {
+            try {
+                const res = await fetch("/jobs");
+                const jobs = await res.json();
+                const tbody = document.getElementById("jobsList");
+                if (jobs.length === 0) return;
+
+                tbody.innerHTML = jobs.map(j => `
+                    <tr>
+                        <td>${j.filename}</td>
+                        <td>${j.targetFormat.toUpperCase()}</td>
+                        <td><span class="badge badge-${j.status}">${j.status}</span></td>
+                        <td>${j.downloadUrl ? `<a href="${j.downloadUrl}" target="_blank" style="color:#38bdf8;">Download</a>` : '-'}</td>
+                    </tr>
+                `).join("");
+            } catch (_) {}
+        }
+
+        loadRecentJobs();
+        setInterval(loadRecentJobs, 3000);
+    </script>
+</body>
+</html>

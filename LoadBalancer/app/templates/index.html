@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Load Balancer Demo</title>
+    <style>
+        body {
+            background-color: {{ color }};
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .card {
+            background: rgba(0, 0, 0, 0.45);
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        h1 {
+            font-size: 3rem;
+            margin: 0 0 20px 0;
+        }
+        p {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Respondido por: {{ instance_id }}</h1>
+        <p><strong>Hostname:</strong> {{ hostname }}</p>
+        <p><strong>Horário:</strong> {{ server_time }}</p>
+        <p><strong>Cabeçalho:</strong> X-Served-By: {{ instance_id }}</p>
+    </div>
+</body>
+</html>
