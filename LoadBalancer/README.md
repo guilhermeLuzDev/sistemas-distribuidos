@@ -108,7 +108,7 @@ docker compose down
 
 ---
 
-## 🧪 Roteiro de Reprodução dos Testes (Seção 4)
+##  Roteiro de Reprodução dos Testes (Seção 4)
 
 Você pode executar todos os testes automaticamente com um único comando:
 ```powershell

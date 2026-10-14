@@ -6,7 +6,7 @@ A arquitetura desacopla a ingestão HTTP do processamento pesado utilizando **Ra
 
 ---
 
-## 🏛️ Arquitetura Distribuída
+##  Arquitetura Distribuída
 
 ```
  [ Usuário / Browser ]
@@ -43,7 +43,7 @@ A arquitetura desacopla a ingestão HTTP do processamento pesado utilizando **Ra
 
 ---
 
-## 🛠️ Tecnologias Utilizadas
+##  Tecnologias Utilizadas
 
 | Componente | Tecnologia | Papel no Sistema |
 | :--- | :--- | :--- |
@@ -58,7 +58,7 @@ A arquitetura desacopla a ingestão HTTP do processamento pesado utilizando **Ra
 
 ---
 
-## 🚀 Como Executar o Projeto
+##  Como Executar o Projeto
 
 ### Passo Único
 Na pasta do projeto, execute:
@@ -74,7 +74,7 @@ docker compose up -d --build
 
 ---
 
-## 📈 Como Escalar os Workers Horizontalmente
+##  Como Escalar os Workers Horizontalmente
 
 Para demonstrar a escalabilidade horizontal e o ganho de throughput com múltiplos workers consumindo da mesma fila em paralelo (competing consumers):
 ```bash
@@ -84,7 +84,7 @@ O RabbitMQ distribuirá automaticamente as mensagens entre os 3 workers (`conver
 
 ---
 
-## 🧪 Como Executar a Bateria de Testes Automatizada
+##  Como Executar a Bateria de Testes Automatizada
 
 Você pode rodar todos os testes de ponta a ponta com o script:
 ```powershell
